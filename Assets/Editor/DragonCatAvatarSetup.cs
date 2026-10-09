@@ -49,6 +49,12 @@ public sealed class DragonCatAvatarSetup : AssetPostprocessor
         }
 
         Undo.RegisterFullObjectHierarchyUndo(root, "Set up Dragon-Cat VRChat avatar");
+
+        // Animator is required by VRChat; Unity usually adds it on import, but make sure.
+        var animator = root.GetComponent<Animator>();
+        if (animator == null) animator = Undo.AddComponent<Animator>(root);
+        animator.applyRootMotion = false;
+
         var descriptor = root.GetComponent<VRCAvatarDescriptor>();
         if (descriptor == null) descriptor = Undo.AddComponent<VRCAvatarDescriptor>(root);
 
