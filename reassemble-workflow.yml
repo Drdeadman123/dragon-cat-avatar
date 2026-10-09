@@ -1,0 +1,31 @@
+name: Reassemble character files
+on:
+  push:
+    paths:
+      - '.chunks/**'
+jobs:
+  reassemble:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reassemble binaries
+        run: |
+          set -e
+          if [ ! -f .chunks/DONE ]; then echo "waiting for DONE marker"; exit 0; fi
+          for f in .chunks/*.000; do
+            base="$(basename "$f" .000)"
+            target="$(echo "$base" | sed 's/__/\//g')"
+            mkdir -p "$(dirname "$target")"
+            cat ".chunks/${base}".* | base64 -d > "$target"
+            echo "wrote $target ($(stat -c%s "$target") bytes)"
+          done
+          git config user.name "muse"
+          git config user.email "muse@local"
+          git add models blender textures art
+          git rm -q -r --cached .chunks
+          rm -rf .chunks .github/workflows/reassemble.yml
+          git add -A
+          git commit -m "Add dragon-cat character model files"
+          git push
